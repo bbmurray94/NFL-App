@@ -1,0 +1,5 @@
+<ol>
+    <li *ngFor = "let t of teamDetailsModel">
+        <a routerLink="/teams/{{t?.id}}">{{t?.displayName}}</a>
+    </li>
+</ol>

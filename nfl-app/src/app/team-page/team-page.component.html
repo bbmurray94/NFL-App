@@ -1,0 +1,14 @@
+<h1>{{teamModel?.displayName}}</h1>
+<img [src]="getTeamLogo()" [alt]="getTeamLogoAlt()" width="250" height="250">
+<h2>{{teamRecordModel?.displayValue}}</h2>
+<button (click)="test()">Press</button>
+<ul>
+    <li *ngFor = "let e of teamEventModels">
+        <div>{{e?.shortName}}</div>
+        <div *ngIf="e?.competitions?.[0]?.competitors?.[0]?.winner == null">{{e?.date | date: 'MMMM d, yyyy, h:mm a' }}</div>
+        <div *ngIf="e?.getOutcome() != ''">
+            <div>{{e?.getOutcome()}}</div>
+            <div>{{e?.getScore()}}</div>
+        </div>
+    </li>
+</ul>

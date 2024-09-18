@@ -19,28 +19,37 @@ export class TeamsService {
   private teamOverallRecord = 
     (typeId: number, teamId: number) => 
       `http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2024/types/${typeId}/teams/${teamId}/records/0`;
+  private eventUrl = (eventId: number) => `http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${eventId}`
 
   
-  getTeam(id: number): Observable<TeamDetails>
+  getTeamDetailsById(id: number): Observable<TeamDetails>
   {
     return this.httpClient.get<TeamDetails>(`${this.teamsUrl}/${id}`);
   }
 
-  getTeamDetails(url: string): Observable<TeamDetails>
+  getTeamDetailsByUrl(url: string): Observable<TeamDetails>
   {
+    console.log("service call");
     return this.httpClient.get<TeamDetails>(url);
   }
 
   getAllTeamsDetails(): Observable<TeamDetails[]>
   {
-    return this.getAllReferences(this.teamsUrl).pipe(switchMap(refs => { const requests = refs.map(ref => this.getTeamDetails(ref.$ref));
+    return this.getAllReferences(this.teamsUrl).pipe(switchMap(refs => 
+      { 
+        const requests = refs.map(ref => this.getTeamDetailsByUrl(ref.$ref));
       return forkJoin(requests);
-    }))
+    }));
   }
 
   getTeamEvent(url: string): Observable<TeamEvent>
   {
     return this.httpClient.get<TeamEvent>(url);
+  }
+
+  getEventById(id: number): Observable<TeamEvent>
+  {
+    return this.httpClient.get<TeamEvent>(this.eventUrl(id));
   }
 
   getAllTeamEvents(url: string): Observable<TeamEvent[]>

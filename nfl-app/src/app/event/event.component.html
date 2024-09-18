@@ -1,0 +1,14 @@
+<h1>{{teamEventModel?.name}}</h1>
+<div id="board">
+    <div id="homeTeam">
+        <img [src]="getTeamLogo(homeTeam!)" [alt]="getTeamLogoAlt(homeTeam!)" width="150" height="150">
+        <h2>{{homeTeam?.teamDetails?.displayName}}</h2>
+    </div>
+    <h2 id="score">{{homeTeam?.score?.displayValue}}-{{awayTeam?.score?.displayValue}}</h2>
+    <div id="awayTeam">
+        <img [src]="getTeamLogo(awayTeam!)" [alt]="getTeamLogoAlt(awayTeam!)" width="150" height="150">
+        <h2>{{awayTeam?.teamDetails?.displayName}}</h2>
+    </div>
+</div>
+
+<button (click)="test()">Test</button>

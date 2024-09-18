@@ -6,12 +6,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { TeamsComponent } from './teams/teams.component';
 import { TeamPageComponent } from './team-page/team-page.component';
+import { EventComponent } from './event/event.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     TeamsComponent,
-    TeamPageComponent
+    TeamPageComponent,
+    EventComponent
   ],
   imports: [
     BrowserModule,

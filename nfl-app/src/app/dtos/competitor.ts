@@ -9,4 +9,5 @@ export interface Competitor
     homeAway: string;
     winner?: boolean;
     score: Reference;
+    team: Reference;
 }

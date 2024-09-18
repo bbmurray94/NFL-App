@@ -11,6 +11,7 @@ import { TeamRecordModel } from '../model/teamRecordModel';
 import { TeamRecordAdapter } from '../adapters/teamRecordAdapter';
 import { TeamEventModel } from '../model/teamEventModel';
 import { TeamEventAdapter } from '../adapters/teamEventAdapter';
+import { TeamEventService } from '../team-event.service';
 
 @Component({
   selector: 'app-team-page',
@@ -21,6 +22,7 @@ export class TeamPageComponent {
   constructor(
     private route: ActivatedRoute, 
     private teamsService: TeamsService, 
+    private teamEventService: TeamEventService,
     private teamDetailsAdapter: TeamDetailsAdapter,
     private teamRecordAdapter: TeamRecordAdapter,
     private teamEventAdapter: TeamEventAdapter
@@ -36,20 +38,18 @@ export class TeamPageComponent {
 
   ngOnInit()
   {
-    this.getTeam();
+    this.getTeam(Number(this.route.snapshot.paramMap.get('id')));
   }
 
-  getTeam()
+  getTeam(id: number)
   {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.teamsService.getTeam(id).subscribe(team => 
+    this.teamsService.getTeamDetailsById(id).subscribe(team => 
       {
-        this.teamModel = this.teamDetailsAdapter.adapt(team);
+        this.teamModel = this.teamEventService.getTeamDetailsModel(team);
         this.team = team;
         this.getTeamRecords();
         this.getEvents();
       });
-    // this.teamsService.getTeam(id).subscribe(team => {this.team = team; this.getEvents(); this.getTeamRecords()});
   }
 
   getEvents()
@@ -63,10 +63,10 @@ export class TeamPageComponent {
             {
               try{
                 const teamEventModel = this.teamEventAdapter.adapt(e);
-              this.getScore(e).subscribe(s => teamEventModel?.setScore(s));
-              teamEventModel?.setOutcome(this.getOutcome(e));
-              this.getScore(e).subscribe(s => teamEventModel?.setScore(s));
-              this.teamEventModels.push(teamEventModel);
+                teamEventModel?.setOutcome(this.teamEventService.getOutcome(e, this.teamModel?.id as number));
+                this.teamEventService.getOrderedScore(e, this.teamModel?.id as number)
+                .subscribe(s => teamEventModel?.setScore(s));
+                this.teamEventModels.push(teamEventModel);
               }
               catch(error){console.error("Error in adapt method:", error)}
               
@@ -75,38 +75,6 @@ export class TeamPageComponent {
     }   
   }
 
-  getOutcome(event: TeamEvent): string
-  {
-    const team = event.competitions?.[0].competitors?.filter(c => c.id == this.teamModel?.id)[0];
-    if(team.winner == true)
-    {
-      return 'W';
-    }
-    if(team.winner == false)
-    {
-      return 'L';
-    }
-    return '';
-  }
-
-  getScore(event: TeamEvent): Observable<string>
-  {
-    const competitors = event.competitions[0].competitors;
-    console.log(competitors);
-    competitors.sort((a,b)=> {
-      if(a.id === this.teamModel?.id) return -1;
-      if(b.id === this.teamModel?.id) return 1;
-      return 0;
-    });
-    const competitorScore1$ = this.teamsService.getScore(competitors[0].score.$ref);
-    const competitorScore2$ = this.teamsService.getScore(competitors[1].score.$ref);
-
-    return forkJoin([competitorScore1$, competitorScore2$]).pipe(
-      map(([competitorScore1, competitorScore2]) => {
-        return `${competitorScore1.displayValue}-${competitorScore2.displayValue}`;
-      })
-    );
-  }
 
   getTeamRecords()
   {
@@ -148,9 +116,9 @@ export class TeamPageComponent {
     }
   }
 
-  getTeamLogo(): string
+  getTeamLogo(teamModel: TeamDetailsModel): string
   {
-    return this.teamModel?.logos[0]?.href || '';
+    return teamModel.logos[0]?.href || '';
   }
 
   getTeamLogoAlt(): string

@@ -1,0 +1,16 @@
+#board{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#homeTeam, #awayTeam {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  #score {
+    flex-grow: 1; /* To center the score between home and away teams */
+    text-align: center;
+  }

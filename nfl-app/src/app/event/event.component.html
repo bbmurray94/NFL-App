@@ -10,5 +10,16 @@
         <h2>{{awayTeam?.teamDetails?.displayName}}</h2>
     </div>
 </div>
+<div id="plays">
+    <ul>
+        <li id="play" *ngFor="let p of playModels.slice().reverse()">
+            <div>
+                <h3>{{p.shortAlternativeText}}</h3>
+                <p>{{p.text}}</p>
+                <p>{{p.start.downDistanceText}}</p>
+            </div>
+        </li>
+    </ul>
+</div>
 
 <button (click)="test()">Test</button>

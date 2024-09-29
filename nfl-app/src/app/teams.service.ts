@@ -7,6 +7,8 @@ import { TeamDetails } from './dtos/teamDetails';
 import { TeamEvent } from './dtos/teamEvent';
 import { TeamRecord } from './dtos/teamRecord';
 import { Score } from './dtos/score';
+import { PagedPlayList } from './dtos/pagedPlayList';
+import { Play } from './dtos/play';
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +21,8 @@ export class TeamsService {
   private teamOverallRecord = 
     (typeId: number, teamId: number) => 
       `http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2024/types/${typeId}/teams/${teamId}/records/0`;
-  private eventUrl = (eventId: number) => `http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${eventId}`
+  private eventUrl = (eventId: number) => `http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${eventId}`;
+  private eventPlaysUrl = (eventId: number, competitionId: number) => `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${eventId}/competitions/${competitionId}/plays`;
 
   
   getTeamDetailsById(id: number): Observable<TeamDetails>
@@ -80,6 +83,26 @@ export class TeamsService {
   getScore(url: string)
   {
     return this.httpClient.get<Score>(url);
+  }
+
+  getEventPlays(eventId: number, competitionId: number): Observable<Play[]>
+  {
+    return this.getAllPlayObjects(eventId, competitionId);
+  }
+
+  private getPlayObjects(eventId: number, competitionId: number, page: number = 1)
+  {
+    return this.httpClient.get<PagedPlayList>(this.eventPlaysUrl(eventId, competitionId)+`?page=${page}`);
+  }
+
+  private getAllPlayObjects(eventId: number, competitionId: number) : Observable<Play[]>
+  {
+    return this.getPlayObjects(eventId, competitionId).pipe(
+      expand(response => response.pageIndex < response.pageCount ? this.getPlayObjects(eventId, competitionId, response.pageIndex+1) :of(null)
+    ),
+    takeWhile(response => response != null),
+    map(response => response?.items ?? []),
+    reduce((allItems, items) => allItems.concat(items), [] as Play[]));
   }
 
   private getReferences(url: string, page: number = 1) : Observable<PagedReferenceList>

@@ -10,7 +10,22 @@
     align-items: center;
   }
   
-  #score {
+#score {
     flex-grow: 1; /* To center the score between home and away teams */
     text-align: center;
-  }
+}
+
+#plays {
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+#play {
+    text-align: left;
+    background-color: grey;
+}
+
+ul {
+    list-style-type: none;
+}

@@ -6,7 +6,10 @@ import { ActivatedRoute } from '@angular/router';
 import { CompetitorModel } from '../model/competitorModel';
 import { ScoreModel } from '../model/scoreModel';
 import { TeamEventModel } from '../model/teamEventModel';
-import { forkJoin, map, Observable } from 'rxjs';
+import { forkJoin, map, Observable, switchMap, timer } from 'rxjs';
+import { Play } from '../dtos/play';
+import { PlayModel } from '../model/playModel';
+import { PlayAdapter } from '../adapters/playAdapter';
 
 @Component({
   selector: 'app-event',
@@ -18,13 +21,16 @@ export class EventComponent {
   constructor(
     private route: ActivatedRoute, 
     private teamsService: TeamsService,
-    private teamEventService: TeamEventService
+    private teamEventService: TeamEventService,
+    private playAdapter: PlayAdapter
   ){}
   
   event: TeamEvent | undefined = undefined;
   teamEventModel: TeamEventModel | undefined = undefined;
   homeTeam: CompetitorModel | undefined = undefined;
   awayTeam: CompetitorModel | undefined = undefined;
+  playModels: PlayModel[] = [];
+  play: Play[] = [];
   
   ngOnInit()
   {
@@ -35,9 +41,13 @@ export class EventComponent {
         this.setUpTeamEventModel(e).subscribe(t => 
           {
             this.teamEventModel = t;
-            console.log(t);
             this.homeTeam = this.teamEventService.getHomeAwayTeam(this.teamEventModel, "home");
             this.awayTeam = this.teamEventService.getHomeAwayTeam(this.teamEventModel, "away");
+            this.teamsService.getEventPlays(this.teamEventModel.id, this.teamEventModel.competitions[0]?.id as number)
+              .subscribe(ps => {this.playModels = ps.map(p => this.playAdapter.adapt(p));
+                this.refreshPlays();
+              });
+
           });
       });
   }
@@ -50,7 +60,6 @@ export class EventComponent {
     for( let i = 0; i<2; i++)
     {
       const competitor = teamEvent.competitions?.[0]?.competitors?.[i];
-      console.log(competitor);
       if(competitor)
       {
         const score$ = this.teamEventService.getScore(competitor).pipe(
@@ -63,9 +72,7 @@ export class EventComponent {
           .pipe(
             map(t => 
               {
-                console.log("t1");
                 const model = this.teamEventService.getTeamDetailsModel(t);
-                console.log("t2");
                 teamEventModel.competitions?.[0]?.competitors?.[i]?.addTeamDetails(model);
               })
           );
@@ -75,6 +82,22 @@ export class EventComponent {
       }
     }
     return forkJoin(observables).pipe(map(()=> teamEventModel));
+  }
+
+  refreshPlays()
+  {
+    timer(5000, 5000)
+      .pipe(
+        switchMap(() => this.teamsService.getEventPlays(this.teamEventModel?.id as number, this.teamEventModel?.competitions[0]?.id as number))
+      )
+      .subscribe(newPlays => {
+        newPlays.forEach(play => {
+          // Only add if it's a new play (e.g., comparing by play ID)
+          if (!this.playModels.find(p => p.id === play.id)) {
+            this.playModels.push(this.playAdapter.adapt(play));
+          }
+        });
+      });
   }
 
   getTeamLogo(competitor: CompetitorModel): string
@@ -89,8 +112,6 @@ export class EventComponent {
 
   test()
   {
-    console.log(this.teamEventModel);
-    console.log(this.homeTeam);
-    console.log(this.awayTeam);
+    console.log(this.playModels);
   }
 }
